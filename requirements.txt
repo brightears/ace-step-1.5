@@ -1,0 +1,29 @@
+# FastAPI and server
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.6
+
+# ACE-Step (installed from git or local)
+# acestep @ git+https://github.com/ace-step/ACE-Step-1.5.git
+
+# Core dependencies (these are also required by acestep)
+torch>=2.1.0
+torchaudio>=2.1.0
+transformers>=4.40.0
+accelerate>=0.27.0
+safetensors>=0.4.0
+einops>=0.7.0
+scipy>=1.11.0
+numpy>=1.24.0
+
+# Audio processing
+soundfile>=0.12.0
+librosa>=0.10.0
+
+# LLM backend
+vllm>=0.4.0
+
+# Utilities
+pydantic>=2.0.0
+huggingface-hub>=0.20.0
+tqdm>=4.66.0
