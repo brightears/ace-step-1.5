@@ -35,6 +35,21 @@ docker compose up -d
 
 The API will be available at `http://localhost:8000`.
 
+## CLI Tool (Recommended)
+
+The easiest way to generate music is using the included Python CLI script:
+
+```bash
+python generate_music.py \
+  --api-url http://localhost:8000 \
+  --caption "Upbeat indie pop with jangly guitars and energetic vocals" \
+  --lyrics "[Verse 1]\nWalking down the street\nMusic in my feet\n\n[Chorus]\nWe are alive tonight" \
+  --duration 90 \
+  --output my_song.mp3
+```
+
+The CLI handles task submission, polling, and file download automatically. See `python generate_music.py --help` for all options, or check the [API Usage Guide](docs/API_USAGE.md) for detailed examples.
+
 ## API Endpoints
 
 See the [ACE-Step API documentation](https://github.com/ace-step/ACE-Step-1.5/blob/main/docs/en/API.md) for full details.

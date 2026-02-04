@@ -27,7 +27,22 @@ Once the pod is running:
 - **Gradio UI**: `http://<POD_IP>:7860` - Web interface for music generation
 - **REST API**: `http://<POD_IP>:8000` - Programmatic access
 
-### Generate Music
+### CLI Tool (Recommended)
+
+The easiest way to generate music is using the included Python CLI script. Download `generate_music.py` from the [GitHub repo](https://github.com/ValyrianTech/ace-step-1.5) and run:
+
+```bash
+python generate_music.py \
+  --api-url https://<POD_ID>-8000.proxy.runpod.net \
+  --caption "Upbeat indie pop with jangly guitars and energetic vocals" \
+  --lyrics "[Verse 1]\nWalking down the street\nMusic in my feet\n\n[Chorus]\nWe are alive tonight" \
+  --duration 90 \
+  --output my_song.mp3
+```
+
+The CLI handles task submission, polling, and file download automatically. Use `--help` for all options.
+
+### Generate Music via curl
 
 ```bash
 # Create a generation task
@@ -40,9 +55,10 @@ curl -X POST http://<POD_IP>:8000/release_task \
   }'
 
 # Query result (use task_id from response)
+# IMPORTANT: Use task_id_list, NOT task_ids
 curl -X POST http://<POD_IP>:8000/query_result \
   -H "Content-Type: application/json" \
-  -d '{"task_ids": ["<TASK_ID>"]}'
+  -d '{"task_id_list": ["<TASK_ID>"]}'
 ```
 
 ## Environment Variables
