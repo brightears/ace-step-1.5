@@ -64,16 +64,13 @@ RUN python -c "import os; from huggingface_hub import snapshot_download; snapsho
 # -----------------------------------------------------------------------------
 # Stage 3: Runtime - Minimal image for running the application
 # -----------------------------------------------------------------------------
-FROM nvidia/cuda:12.8.0-devel-ubuntu22.04 as runtime
+FROM nvidia/cuda:12.8.0-runtime-ubuntu22.04 as runtime
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
     PATH="/opt/venv/bin:$PATH" \
-    # CUDA library paths for triton JIT compilation
-    LIBRARY_PATH="/usr/local/cuda/lib64/stubs:${LIBRARY_PATH}" \
-    LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}" \
     # ACE-Step configuration
     ACESTEP_PROJECT_ROOT=/app \
     ACESTEP_CHECKPOINT_DIR=/app/checkpoints \
@@ -82,23 +79,19 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     ACESTEP_DEVICE=cuda \
     ACESTEP_DIT_CONFIG=acestep-v15-turbo \
     ACESTEP_LM_MODEL=acestep-5Hz-lm-1.7B \
-    ACESTEP_LM_BACKEND=vllm \
-    # Triton/Inductor cache directories (for vllm JIT compilation)
-    TRITON_CACHE_DIR=/app/.cache/triton \
-    TORCHINDUCTOR_CACHE_DIR=/app/.cache/torchinductor \
+    ACESTEP_LM_BACKEND=pt \
     # Server configuration
     HOST=0.0.0.0 \
     PORT=8000
 
 WORKDIR /app
 
-# Install runtime dependencies (including gcc for triton/vllm JIT compilation)
+# Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.11 \
     python3.11-venv \
     libsndfile1 \
     ffmpeg \
-    gcc \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/bin/python3.11 /usr/bin/python
 
@@ -117,8 +110,8 @@ COPY --from=model-downloader /models/checkpoints /app/checkpoints
 COPY start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
-# Create output and cache directories
-RUN mkdir -p /app/outputs /app/.cache/triton /app/.cache/torchinductor
+# Create output directory
+RUN mkdir -p /app/outputs
 
 # Expose ports (8000 for API, 7860 for Gradio UI)
 EXPOSE 8000 7860
