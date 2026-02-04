@@ -2,6 +2,8 @@
 
 A Docker image for running ACE-Step 1.5's built-in API server with models pre-baked.
 
+[![ValyrianTech](https://img.shields.io/badge/ValyrianTech-Links-blue)](https://linktr.ee/ValyrianTech) [![Patreon](https://img.shields.io/badge/Patreon-Support-orange)](http://patreon.com/ValyrianTech)
+
 ## Features
 
 - **ACE-Step's built-in API server** with full feature set
