@@ -4,6 +4,15 @@ A Docker image for running ACE-Step 1.5's built-in API server with models pre-ba
 
 [![ValyrianTech](https://img.shields.io/badge/ValyrianTech-Links-blue)](https://linktr.ee/ValyrianTech) [![Patreon](https://img.shields.io/badge/Patreon-Support-orange)](http://patreon.com/ValyrianTech)
 
+## Deploy on RunPod
+
+The fastest way to get started is to deploy the pre-built image on RunPod:
+
+[![Deploy on RunPod](https://img.shields.io/badge/RunPod-Deploy-blueviolet?logo=runpod)](https://console.runpod.io/deploy?template=uuc79b5j3c&ref=2vdt3dn9)
+
+This template includes all models pre-loaded and is ready to use immediately. Once deployed:
+- **REST API**: `https://<POD_ID>-8000.proxy.runpod.net`
+
 ## Features
 
 - **ACE-Step's built-in API server** with full feature set
