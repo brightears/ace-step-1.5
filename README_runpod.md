@@ -70,8 +70,8 @@ curl -X POST http://<POD_IP>:8000/query_result \
 
 ## GPU Requirements
 
-- Minimum: 8GB VRAM (RTX 3070/4070)
-- Recommended: 16GB+ VRAM (RTX 4090, A100)
+- Minimum: 32GB VRAM
+- Recommended: RTX 5090 or equivalent
 
 ## Links
 
