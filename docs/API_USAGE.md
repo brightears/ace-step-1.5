@@ -71,29 +71,67 @@ Response:
 
 ### 3. Query Task Result
 
-Poll for the result using the task ID:
+Poll for the result using the task ID. **Important:** The parameter is `task_id_list` (not `task_ids`):
 
 ```bash
 curl -X POST http://localhost:8000/query_result \
   -H "Content-Type: application/json" \
-  -d '{"task_ids": ["ea782b05-87d3-428f-a269-27a7bea32c94"]}'
+  -d '{"task_id_list": ["ea782b05-87d3-428f-a269-27a7bea32c94"]}'
 ```
 
-**Note:** Results may return empty (`"data": []`) while the task is still processing. Keep polling until you get results or check the server logs for completion.
+Response (when complete):
+```json
+{
+  "data": [
+    {
+      "task_id": "ea782b05-87d3-428f-a269-27a7bea32c94",
+      "status": 1,
+      "result": "[{\"file\": \"/v1/audio?path=%2Fapp%2Foutputs%2Fapi_audio%2Fc3ababa4-7d39-827c-21ca-a7ef8add99d8.mp3\", ...}]"
+    }
+  ],
+  "code": 200
+}
+```
+
+**Key points:**
+- Use `task_id_list` parameter (NOT `task_ids` - wrong parameter name returns empty results)
+- The `result` field is a JSON string containing an array of generated audio files
+- Each item has a `file` field with the download URL (URL-encoded path)
+- The **audio filename is different from the task ID** - they are separate UUIDs
+- With `batch_size: 2` (default), you get 2 audio files in the result
+
+**Status codes in result:**
+- `0` = in progress
+- `1` = success
+- `2` = failed
 
 ### 4. Download Generated Audio
 
-Once generation completes, audio files are saved to `/app/outputs/api_audio/`. Download using the **full absolute path**:
+Extract the `file` URL from the query result and download. The path is URL-encoded, so you can use it directly:
 
 ```bash
-curl -o ./song.mp3 "http://localhost:8000/v1/audio?path=/app/outputs/api_audio/<filename>.mp3"
+# Using the file URL from query_result (already URL-encoded)
+curl -o song.mp3 "http://localhost:8000/v1/audio?path=%2Fapp%2Foutputs%2Fapi_audio%2Fc3ababa4-7d39-827c-21ca-a7ef8add99d8.mp3"
+
+# Or with the decoded path (must be full absolute path)
+curl -o song.mp3 "http://localhost:8000/v1/audio?path=/app/outputs/api_audio/c3ababa4-7d39-827c-21ca-a7ef8add99d8.mp3"
 ```
 
-**Important:** The `path` parameter requires the full absolute path on the server, not just the filename.
+**⚠️ IMPORTANT - Common Mistakes:**
+
+1. **Wrong parameter name:** Using `task_ids` instead of `task_id_list` returns empty results
+
+2. **The filename is NOT the task ID.** The task ID (e.g., `945bb822-b563-44bb-8a41-9a952cc0e9e6`) is different from the audio filename (e.g., `c3ababa4-7d39-827c-21ca-a7ef8add99d8.mp3`)
+
+3. **You MUST use the full absolute path.** The path must start with `/app/outputs/api_audio/`
 
 Example:
 ```bash
-curl -o song.mp3 "http://localhost:8000/v1/audio?path=/app/outputs/api_audio/e0a7dddd-9a3a-b5e0-c98b-b07bd36e2e2f.mp3"
+# WRONG - using task ID as filename (WILL NOT WORK)
+curl -o song.mp3 "http://localhost:8000/v1/audio?path=/app/outputs/api_audio/945bb822-b563-44bb-8a41-9a952cc0e9e6.mp3"
+
+# CORRECT - using actual filename from query_result
+curl -o song.mp3 "http://localhost:8000/v1/audio?path=/app/outputs/api_audio/c3ababa4-7d39-827c-21ca-a7ef8add99d8.mp3"
 ```
 
 ## Request Parameters
@@ -160,29 +198,47 @@ curl -X POST http://localhost:8000/format_input \
 
 **Symptom:** `/query_result` returns `{"data": []}` even after waiting.
 
-**Cause:** Task is still processing, or the result was already retrieved (results may be single-use).
+**Cause:** You're using the wrong parameter name. The correct parameter is `task_id_list`, NOT `task_ids`.
 
 **Solution:** 
-- Check server logs for generation progress
-- Monitor for "Saved audio to..." log messages
-- Results typically take 30-120 seconds depending on duration and GPU
+```bash
+# WRONG - returns empty data
+curl -X POST http://localhost:8000/query_result \
+  -d '{"task_ids": ["..."]}'  # Wrong parameter name!
+
+# CORRECT - returns results
+curl -X POST http://localhost:8000/query_result \
+  -d '{"task_id_list": ["..."]}'  # Correct parameter name
+```
+
+If still empty with correct parameter, the task may still be processing (typically 30-120 seconds).
 
 ### Issue: Audio file not found
 
 **Symptom:** `/v1/audio` returns `{"detail": "Audio file not found: ..."}`
 
-**Cause:** The `path` parameter format is incorrect.
+**Cause:** Either:
+1. The `path` parameter format is incorrect, OR
+2. You're using the **task ID** instead of the **actual audio filename** (these are different!)
 
-**Solution:** Use the **full absolute path** including `/app/outputs/api_audio/`:
+**Solution:**
+
+1. **Get the correct filename from `/query_result`** using `task_id_list` parameter - the `file` field contains the download URL
+2. **Use the full absolute path** including `/app/outputs/api_audio/`
+
 ```bash
-# Wrong - relative path
+# WRONG - using task ID as filename
+curl "http://localhost:8000/v1/audio?path=/app/outputs/api_audio/945bb822-b563-44bb-8a41-9a952cc0e9e6.mp3"
+# This will fail because the task ID is NOT the audio filename!
+
+# WRONG - relative path
 curl "http://localhost:8000/v1/audio?path=e0a7dddd.mp3"
 
-# Wrong - partial path  
+# WRONG - partial path  
 curl "http://localhost:8000/v1/audio?path=api_audio/e0a7dddd.mp3"
 
-# Correct - full absolute path
-curl "http://localhost:8000/v1/audio?path=/app/outputs/api_audio/e0a7dddd.mp3"
+# CORRECT - full absolute path with actual filename from query_result
+curl "http://localhost:8000/v1/audio?path=/app/outputs/api_audio/e0a7dddd-9a3a-b5e0-c98b-b07bd36e2e2f.mp3"
 ```
 
 ### Issue: Model checkpoint not found
@@ -239,17 +295,41 @@ RESPONSE=$(curl -s -X POST "$API_URL/release_task" \
 TASK_ID=$(echo $RESPONSE | jq -r '.data.task_id')
 echo "Task submitted: $TASK_ID"
 
-# 2. Poll for completion (check logs for actual file paths)
+# 2. Poll for completion (30-120 seconds depending on duration and GPU)
+# IMPORTANT: Use task_id_list, NOT task_ids!
 echo "Waiting for generation..."
-sleep 60
+while true; do
+  RESULT=$(curl -s -X POST "$API_URL/query_result" \
+    -H "Content-Type: application/json" \
+    -d "{\"task_id_list\": [\"$TASK_ID\"]}")
+  
+  STATUS=$(echo $RESULT | jq -r '.data[0].status // 0')
+  if [ "$STATUS" = "1" ]; then
+    echo "Generation complete!"
+    break
+  elif [ "$STATUS" = "2" ]; then
+    echo "Generation failed!"
+    exit 1
+  fi
+  echo "Still processing..."
+  sleep 10
+done
 
-# 3. Query result
-curl -s -X POST "$API_URL/query_result" \
-  -H "Content-Type: application/json" \
-  -d "{\"task_ids\": [\"$TASK_ID\"]}" | jq
+# 3. Extract audio file URLs from result
+# The result field is a JSON string containing array of files
+# Each file has a "file" field with the download URL
+FILES=$(echo $RESULT | jq -r '.data[0].result' | jq -r '.[].file')
+echo "Audio files:"
+echo "$FILES"
 
-# 4. Download audio (get filename from server logs or query result)
-# curl -o output.mp3 "$API_URL/v1/audio?path=/app/outputs/api_audio/<filename>.mp3"
+# 4. Download audio files
+# Note: The file URLs are already properly formatted for the /v1/audio endpoint
+COUNTER=1
+for FILE_URL in $FILES; do
+  curl -s -o "output_$COUNTER.mp3" "$API_URL$FILE_URL"
+  echo "Downloaded output_$COUNTER.mp3"
+  COUNTER=$((COUNTER + 1))
+done
 ```
 
 ## GPU Requirements
