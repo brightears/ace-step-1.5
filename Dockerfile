@@ -78,10 +78,13 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:$PATH"
 
 # Clone ACE-Step directly into /app and install
-# This ensures ./checkpoints resolves to /app/checkpoints
 RUN git clone https://github.com/ace-step/ACE-Step-1.5.git /app && \
     rm -rf /app/.git && \
     uv pip install --system --no-cache .
+
+# Create symlink so ACE-Step's model discovery finds /app/checkpoints
+# ACE-Step uses __file__ to locate checkpoints relative to its install path
+RUN ln -s /app/checkpoints /usr/local/lib/python3.11/dist-packages/checkpoints
 
 # Copy models from model-downloader stage into /app/checkpoints
 COPY --from=model-downloader /models/checkpoints /app/checkpoints
