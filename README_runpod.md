@@ -80,3 +80,4 @@ curl -X POST http://<POD_IP>:8000/query_result \
 - [API Documentation](https://github.com/ace-step/ACE-Step-1.5/blob/main/docs/en/API.md)
 - [Docker Image Source](https://github.com/ValyrianTech/ace-step-1.5)
 - [ValyrianTech](https://linktr.ee/ValyrianTech)
+- [Patreon](http://patreon.com/ValyrianTech)
