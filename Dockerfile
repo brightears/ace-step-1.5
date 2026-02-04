@@ -23,23 +23,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:$PATH"
 
-# Copy requirements first for better caching
-COPY requirements.txt .
-
-# Create virtual environment and install dependencies
+# Create virtual environment
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Install PyTorch with CUDA 12.8 support (with extended timeout for large downloads)
-RUN pip install --no-cache-dir --timeout 300 \
-    torch==2.10.0 \
-    torchaudio==2.10.0 \
-    --index-url https://download.pytorch.org/whl/cu128
-
-# Install other requirements
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Clone ACE-Step and install using uv (handles local nano-vllm dependency)
+# Clone ACE-Step and install using uv (handles all dependencies including nano-vllm)
 RUN git clone https://github.com/ace-step/ACE-Step-1.5.git /tmp/acestep && \
     cd /tmp/acestep && \
     uv pip install --no-cache . && \
