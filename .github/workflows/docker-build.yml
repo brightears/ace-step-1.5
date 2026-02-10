@@ -34,8 +34,8 @@ jobs:
           context: .
           push: true
           tags: |
-            brightears/ace-step-1.5:latest
-            brightears/ace-step-1.5:${{ github.sha }}
+            benorbe/ace-step-1.5:latest
+            benorbe/ace-step-1.5:${{ github.sha }}
           build-args: |
             HF_TOKEN=${{ secrets.HF_TOKEN }}
           cache-from: type=gha
