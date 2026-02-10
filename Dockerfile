@@ -89,9 +89,20 @@ RUN ln -s /app/checkpoints /usr/local/lib/python3.11/dist-packages/checkpoints
 # Copy models from model-downloader stage into /app/checkpoints
 COPY --from=model-downloader /models/checkpoints /app/checkpoints
 
+# Apply bug fixes to model Python files (CFG re-doubling, SDE timestep, ADG mismatch)
+# These fix generation crashes in the upstream HuggingFace model code.
+# See: https://github.com/ACE-Step/ACE-Step-1.5/issues/333
+COPY patches/acestep-v15-base/modeling_acestep_v15_base.py /app/checkpoints/acestep-v15-base/
+COPY patches/acestep-v15-base/apg_guidance.py /app/checkpoints/acestep-v15-base/
+COPY patches/acestep-v15-sft/modeling_acestep_v15_base.py /app/checkpoints/acestep-v15-sft/
+COPY patches/acestep-v15-sft/apg_guidance.py /app/checkpoints/acestep-v15-sft/
+
 # Create placeholder for acestep-v15-turbo to satisfy check_main_model_exists()
 # We use acestep-v15-base instead, but the check looks for all MAIN_MODEL_COMPONENTS
 RUN mkdir -p /app/checkpoints/acestep-v15-turbo
+
+# Install tensorboardX for LoRA fine-tuning support
+RUN pip install --no-cache-dir tensorboardX
 
 # Copy startup script
 COPY start.sh /app/start.sh
