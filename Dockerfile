@@ -70,8 +70,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libsndfile1 \
     ffmpeg \
+    openssh-server \
     && rm -rf /var/lib/apt/lists/* \
-    && ln -sf /usr/bin/python3.11 /usr/bin/python
+    && ln -sf /usr/bin/python3.11 /usr/bin/python \
+    && mkdir -p /var/run/sshd
 
 # Install uv for faster dependency resolution
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh

@@ -1,7 +1,18 @@
 #!/bin/bash
-# Start both ACE-Step API server and Gradio UI
+# Start ACE-Step services + SSH for remote management
 
 echo "Starting ACE-Step services..."
+
+# Set up SSH access if PUBLIC_KEY is set
+if [ -n "$PUBLIC_KEY" ]; then
+    echo "Setting up SSH access..."
+    mkdir -p /root/.ssh
+    echo "$PUBLIC_KEY" > /root/.ssh/authorized_keys
+    chmod 700 /root/.ssh
+    chmod 600 /root/.ssh/authorized_keys
+    /usr/sbin/sshd
+    echo "SSH server started on port 22"
+fi
 
 # Model paths (pre-baked in Docker image)
 CONFIG_PATH="${ACESTEP_CONFIG_PATH:-/app/checkpoints/acestep-v15-base}"
